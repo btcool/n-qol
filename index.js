@@ -1,4 +1,27 @@
 (function() {
+    m.couplingChange = function(change = 0) {
+        if (change > 0 && level.onLevel !== -1) simulation.inGameConsole(`<div class="coupling-circle"></div> m.coupling <span class='color-symbol'>+=</span> ${change}`, 3); //changed the 60 to a 3 for the duration, reducing the lag caused by in-game console from picking up coupling. level.onLevel !== -1  means not on lore level
+        m.coupling += change
+        if (m.coupling < 0) {
+            //look for coupling power ups on this level and remove them to prevent exploiting tech ejections
+            for (let i = powerUp.length - 1; i > -1; i--) {
+                if (powerUp[i].name === "coupling") {
+                    Matter.Composite.remove(engine.world, powerUp[i]);
+                    powerUp.splice(i, 1);
+                    m.coupling += 1
+                    if (!(m.coupling < 0)) break
+                }
+            }
+            m.coupling = 0 //can't go negative
+        }
+        m.setMaxEnergy(false);
+        // m.setMaxHealth();
+        m.setFieldRegen()
+        mobs.setMobSpawnHealth();
+        powerUps.setPowerUpMode();
+
+        // if ((m.fieldMode === 0 || m.fieldMode === 9) && !build.isExperimentSelection && !simulation.isTextLogOpen) simulation.circleFlare(0.4);
+    }
     const counts = powerUps.spawnQueue = {};
     let running = false;
     powerUps.spawnDelay = function(type, count) {
